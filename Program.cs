@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.IO;
+using StandAloneCSharpParser.model;
 
 namespace StandAloneCSharpParser
 {
@@ -13,13 +14,19 @@ namespace StandAloneCSharpParser
 
         static void Main(string[] args)
         {
-            String programPath = @"C:\Users\Borisz\Desktop\parser\filesToParse\CentroidBasedClustering.cs";
-            String programText = File.ReadAllText(programPath);
+            string programPath = @"C:\Users\Borisz\Desktop\parser\filesToParse\CentroidBasedClustering.cs";
+            string programText = File.ReadAllText(programPath);
             SyntaxTree tree = CSharpSyntaxTree.ParseText(programText);
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
-            SyntaxNode node = root;
+            CSharpCompilation compilation = CSharpCompilation.Create("CSharpCompilation")
+                .AddReferences(MetadataReference.CreateFromFile(typeof(object).Assembly.Location))
+                .AddSyntaxTrees(tree);
 
-            var visitor = new AstVisitor();
+            SemanticModel model = compilation.GetSemanticModel(tree);
+            CsharpDbContext dbContext = new CsharpDbContext();
+            
+
+            var visitor = new AstVisitor(dbContext, model, tree);
             visitor.Visit(root);
 
         }
