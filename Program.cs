@@ -28,6 +28,7 @@ namespace StandAloneCSharpParser
 
             var visitor = new AstVisitor(dbContext, model, tree);
             visitor.Visit(root);
+            //dbContext.SaveChanges();
 
         }
     }

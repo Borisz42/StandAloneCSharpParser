@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StandAloneCSharpParser.model;
@@ -9,9 +10,10 @@ using StandAloneCSharpParser.model;
 namespace StandAloneCSharpParser.Migrations
 {
     [DbContext(typeof(CsharpDbContext))]
-    partial class javadbcontextModelSnapshot : ModelSnapshot
+    [Migration("20211004174256_foreignKeyAlternative2")]
+    partial class foreignKeyAlternative2
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -288,13 +290,11 @@ namespace StandAloneCSharpParser.Migrations
                         .WithMany()
                         .HasForeignKey("AstNodeId");
 
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpClasses")
                         .HasForeignKey("CsharpNamespaceId");
 
                     b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnum", b =>
@@ -303,13 +303,11 @@ namespace StandAloneCSharpParser.Migrations
                         .WithMany()
                         .HasForeignKey("AstNodeId");
 
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpEnums")
                         .HasForeignKey("CsharpNamespaceId");
 
                     b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnumMember", b =>
@@ -385,6 +383,13 @@ namespace StandAloneCSharpParser.Migrations
                     b.Navigation("CsharpMethodLocals");
 
                     b.Navigation("CsharpMethodParams");
+                });
+
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
+                {
+                    b.Navigation("CsharpClasses");
+
+                    b.Navigation("CsharpEnums");
                 });
 #pragma warning restore 612, 618
         }

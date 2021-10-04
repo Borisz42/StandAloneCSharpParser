@@ -4,6 +4,6 @@ namespace StandAloneCSharpParser.model
 {
     class CsharpVariable : CsharpTypedEntity
     {
-        
+        public bool IsProperty { get; set; } = false;
     }
 }

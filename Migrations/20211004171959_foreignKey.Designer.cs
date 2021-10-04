@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StandAloneCSharpParser.model;
@@ -9,9 +10,10 @@ using StandAloneCSharpParser.model;
 namespace StandAloneCSharpParser.Migrations
 {
     [DbContext(typeof(CsharpDbContext))]
-    partial class javadbcontextModelSnapshot : ModelSnapshot
+    [Migration("20211004171959_foreignKey")]
+    partial class foreignKey
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,7 +23,7 @@ namespace StandAloneCSharpParser.Migrations
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpAstNode", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<long>("AstNodeId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
@@ -50,23 +52,24 @@ namespace StandAloneCSharpParser.Migrations
                     b.Property<int>("RawKind")
                         .HasColumnType("integer");
 
-                    b.HasKey("Id");
+                    b.HasKey("AstNodeId");
 
                     b.ToTable("CsharpAstNodes");
                 });
 
-            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEntity", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
-                    b.Property<long?>("CsharpNamespaceId")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Discriminator")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<string>("DocumentationCommentXML")
                         .HasColumnType("text");
@@ -84,163 +87,85 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasIndex("AstNodeId");
 
+                    b.ToTable("CsharpEntity");
+
+                    b.HasDiscriminator<string>("Discriminator").HasValue("CsharpEntity");
+                });
+
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
+                {
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
+
+                    b.Property<long?>("CsharpNamespaceId")
+                        .HasColumnType("bigint");
+
                     b.HasIndex("CsharpNamespaceId");
 
-                    b.ToTable("CsharpClasses");
+                    b.HasDiscriminator().HasValue("CsharpClass");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnum", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long?>("AstNodeId")
-                        .HasColumnType("bigint");
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
 
                     b.Property<long?>("CsharpNamespaceId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DocumentationCommentXML")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EntityHash")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("QualifiedName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
+                        .HasColumnType("bigint")
+                        .HasColumnName("CsharpEnum_CsharpNamespaceId");
 
                     b.HasIndex("CsharpNamespaceId");
 
-                    b.ToTable("CsharpEnums");
+                    b.HasDiscriminator().HasValue("CsharpEnum");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnumMember", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long?>("AstNodeId")
-                        .HasColumnType("bigint");
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
 
                     b.Property<long?>("CsharpEnumId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DocumentationCommentXML")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EntityHash")
                         .HasColumnType("bigint");
 
                     b.Property<int>("EqualsValue")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("QualifiedName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
-
                     b.HasIndex("CsharpEnumId");
 
-                    b.ToTable("CsharpEnumMember");
+                    b.HasDiscriminator().HasValue("CsharpEnumMember");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpMethod", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long?>("AstNodeId")
-                        .HasColumnType("bigint");
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
 
                     b.Property<long?>("CsharpClassId")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("DocumentationCommentXML")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EntityHash")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("QualifiedName")
-                        .HasColumnType("text");
-
                     b.Property<string>("QualifiedType")
+                        .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("text");
 
                     b.Property<long>("TypeHash")
+                        .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
 
                     b.HasIndex("CsharpClassId");
 
-                    b.ToTable("CsharpMethod");
+                    b.HasDiscriminator().HasValue("CsharpMethod");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
 
-                    b.Property<long?>("AstNodeId")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("DocumentationCommentXML")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EntityHash")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("QualifiedName")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
-
-                    b.ToTable("CsharpNamespaces");
+                    b.HasDiscriminator().HasValue("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpVariable", b =>
                 {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
-                        .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
-
-                    b.Property<long?>("AstNodeId")
-                        .HasColumnType("bigint");
+                    b.HasBaseType("StandAloneCSharpParser.model.CsharpEntity");
 
                     b.Property<long?>("CsharpClassId")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasColumnName("CsharpVariable_CsharpClassId");
 
                     b.Property<long?>("CsharpMethodId")
                         .HasColumnType("bigint");
@@ -248,30 +173,16 @@ namespace StandAloneCSharpParser.Migrations
                     b.Property<long?>("CsharpMethodId1")
                         .HasColumnType("bigint");
 
-                    b.Property<string>("DocumentationCommentXML")
-                        .HasColumnType("text");
-
-                    b.Property<long>("EntityHash")
-                        .HasColumnType("bigint");
-
                     b.Property<bool>("IsProperty")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Name")
-                        .HasColumnType("text");
-
-                    b.Property<string>("QualifiedName")
-                        .HasColumnType("text");
-
                     b.Property<string>("QualifiedType")
+                        .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("text");
 
                     b.Property<long>("TypeHash")
+                        .ValueGeneratedOnUpdateSometimes()
                         .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
 
                     b.HasIndex("CsharpClassId");
 
@@ -279,80 +190,48 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasIndex("CsharpMethodId1");
 
-                    b.ToTable("CsharpVariable");
+                    b.HasDiscriminator().HasValue("CsharpVariable");
+                });
+
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEntity", b =>
+                {
+                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", null)
+                        .WithMany()
+                        .HasForeignKey("AstNodeId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpClasses")
                         .HasForeignKey("CsharpNamespaceId");
-
-                    b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnum", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpEnums")
                         .HasForeignKey("CsharpNamespaceId");
-
-                    b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnumMember", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpEnum", null)
                         .WithMany("CsharpEnumMembers")
                         .HasForeignKey("CsharpEnumId");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpMethod", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpClass", null)
                         .WithMany("CsharpClassMethods")
                         .HasForeignKey("CsharpClassId");
-
-                    b.Navigation("AstNode");
-                });
-
-            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
-                {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpVariable", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpClass", null)
                         .WithMany("CsharpClassLocals")
                         .HasForeignKey("CsharpClassId");
@@ -364,8 +243,6 @@ namespace StandAloneCSharpParser.Migrations
                     b.HasOne("StandAloneCSharpParser.model.CsharpMethod", null)
                         .WithMany("CsharpMethodParams")
                         .HasForeignKey("CsharpMethodId1");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
@@ -385,6 +262,13 @@ namespace StandAloneCSharpParser.Migrations
                     b.Navigation("CsharpMethodLocals");
 
                     b.Navigation("CsharpMethodParams");
+                });
+
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
+                {
+                    b.Navigation("CsharpClasses");
+
+                    b.Navigation("CsharpEnums");
                 });
 #pragma warning restore 612, 618
         }

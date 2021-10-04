@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StandAloneCSharpParser.model;
@@ -9,9 +10,10 @@ using StandAloneCSharpParser.model;
 namespace StandAloneCSharpParser.Migrations
 {
     [DbContext(typeof(CsharpDbContext))]
-    partial class javadbcontextModelSnapshot : ModelSnapshot
+    [Migration("20211003210414_classes_and_namespaces")]
+    partial class classes_and_namespaces
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,9 +23,9 @@ namespace StandAloneCSharpParser.Migrations
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpAstNode", b =>
                 {
-                    b.Property<long>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint")
+                        .HasColumnType("integer")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
                     b.Property<string>("AstValue")
@@ -62,7 +64,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("CsharpNamespaceId")
@@ -81,8 +83,6 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("text");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AstNodeId");
 
                     b.HasIndex("CsharpNamespaceId");
 
@@ -96,7 +96,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("CsharpNamespaceId")
@@ -116,8 +116,6 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AstNodeId");
-
                     b.HasIndex("CsharpNamespaceId");
 
                     b.ToTable("CsharpEnums");
@@ -130,7 +128,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("CsharpEnumId")
@@ -153,8 +151,6 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AstNodeId");
-
                     b.HasIndex("CsharpEnumId");
 
                     b.ToTable("CsharpEnumMember");
@@ -167,7 +163,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("CsharpClassId")
@@ -193,8 +189,6 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AstNodeId");
-
                     b.HasIndex("CsharpClassId");
 
                     b.ToTable("CsharpMethod");
@@ -207,7 +201,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<string>("DocumentationCommentXML")
@@ -224,8 +218,6 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AstNodeId");
-
                     b.ToTable("CsharpNamespaces");
                 });
 
@@ -236,7 +228,7 @@ namespace StandAloneCSharpParser.Migrations
                         .HasColumnType("bigint")
                         .HasAnnotation("Npgsql:ValueGenerationStrategy", NpgsqlValueGenerationStrategy.IdentityByDefaultColumn);
 
-                    b.Property<long?>("AstNodeId")
+                    b.Property<long>("AstNodeId")
                         .HasColumnType("bigint");
 
                     b.Property<long?>("CsharpClassId")
@@ -271,8 +263,6 @@ namespace StandAloneCSharpParser.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AstNodeId");
-
                     b.HasIndex("CsharpClassId");
 
                     b.HasIndex("CsharpMethodId");
@@ -284,75 +274,34 @@ namespace StandAloneCSharpParser.Migrations
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpClasses")
                         .HasForeignKey("CsharpNamespaceId");
-
-                    b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnum", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", "CsharpNamespace")
-                        .WithMany()
+                    b.HasOne("StandAloneCSharpParser.model.CsharpNamespace", null)
+                        .WithMany("CsharpEnums")
                         .HasForeignKey("CsharpNamespaceId");
-
-                    b.Navigation("AstNode");
-
-                    b.Navigation("CsharpNamespace");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpEnumMember", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpEnum", null)
                         .WithMany("CsharpEnumMembers")
                         .HasForeignKey("CsharpEnumId");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpMethod", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpClass", null)
                         .WithMany("CsharpClassMethods")
                         .HasForeignKey("CsharpClassId");
-
-                    b.Navigation("AstNode");
-                });
-
-            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
-                {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpVariable", b =>
                 {
-                    b.HasOne("StandAloneCSharpParser.model.CsharpAstNode", "AstNode")
-                        .WithMany()
-                        .HasForeignKey("AstNodeId");
-
                     b.HasOne("StandAloneCSharpParser.model.CsharpClass", null)
                         .WithMany("CsharpClassLocals")
                         .HasForeignKey("CsharpClassId");
@@ -364,8 +313,6 @@ namespace StandAloneCSharpParser.Migrations
                     b.HasOne("StandAloneCSharpParser.model.CsharpMethod", null)
                         .WithMany("CsharpMethodParams")
                         .HasForeignKey("CsharpMethodId1");
-
-                    b.Navigation("AstNode");
                 });
 
             modelBuilder.Entity("StandAloneCSharpParser.model.CsharpClass", b =>
@@ -385,6 +332,13 @@ namespace StandAloneCSharpParser.Migrations
                     b.Navigation("CsharpMethodLocals");
 
                     b.Navigation("CsharpMethodParams");
+                });
+
+            modelBuilder.Entity("StandAloneCSharpParser.model.CsharpNamespace", b =>
+                {
+                    b.Navigation("CsharpClasses");
+
+                    b.Navigation("CsharpEnums");
                 });
 #pragma warning restore 612, 618
         }
