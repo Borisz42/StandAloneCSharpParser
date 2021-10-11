@@ -8,6 +8,7 @@ namespace StandAloneCSharpParser.model
         public DbSet<CsharpAstNode> CsharpAstNodes { get; set; }
         public DbSet<CsharpNamespace> CsharpNamespaces { get; set; }
         public DbSet<CsharpClass> CsharpClasses { get; set; }
+        public DbSet<CsharpStruct> CsharpStructs { get; set; }
         public DbSet<CsharpEnum> CsharpEnums { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)

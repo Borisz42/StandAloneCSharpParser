@@ -31,10 +31,9 @@ namespace StandAloneCSharpParser
             {
                 AstValue = node.ToString(),
                 RawKind = node.RawKind,
-                EntityHash = node. GetHashCode()
+                EntityHash = node.GetHashCode()
             };
             astNode.SetLocation(Tree.GetLineSpan(node.Span));
-           // if (AstNodeHashCodes.Contains(node.GetHashCode())) WriteLine($"Kétszer szerepelt: {node}");
             DbContext.CsharpAstNodes.Add(astNode);
             return astNode;
         }
@@ -42,7 +41,9 @@ namespace StandAloneCSharpParser
         public override void VisitUsingDirective(UsingDirectiveSyntax node)
         {
             //base.VisitUsingDirective(node);
+            //Adatbázisban nem kell feltétlenül tárolni, inkább csak azt kell biztosítani hogy amiket meghívunk vele azok is be legyenek járva
             WriteLine($" UsingDirective name: {node.Name}");
+
         }
 
         public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
@@ -71,6 +72,62 @@ namespace StandAloneCSharpParser
             CsharpNamespaces.Add(csharpNamespace);
             DbContext.CsharpNamespaces.Add(csharpNamespace);
             base.VisitNamespaceDeclaration(node);
+        }
+
+        public override void VisitStructDeclaration(StructDeclarationSyntax node)
+        {
+            CsharpAstNode astNode = AstNode(node);
+            base.VisitStructDeclaration(node);
+            WriteLine($"\n StructDeclaration visited: {node.Identifier.Text}");
+            string qName = "";
+            try
+            {
+                qName = Model.GetDeclaredSymbol(node).ToString();
+            }
+            catch (Exception)
+            {
+                WriteLine($"Can not get QualifiedName of this name: {node.Identifier}");
+            }
+
+            var nameSpaces = CsharpNamespaces.Where(n => qName.Contains(n.Name)).ToList();
+            CsharpNamespace csharpNamespace = null;
+            if (nameSpaces.Count == 1)
+            {
+                csharpNamespace = nameSpaces.First();
+            }
+
+            CsharpStruct csharpStruct = new CsharpStruct
+            {
+                CsharpNamespace = csharpNamespace,
+                AstNode = astNode,
+                Name = node.Identifier.Text,
+                QualifiedName = qName,
+                DocumentationCommentXML = Model.GetDeclaredSymbol(node).GetDocumentationCommentXml(),
+                EntityHash = astNode.EntityHash
+            };
+
+            foreach (VariableDeclarationSyntax variableDeclaration in node.Members.OfType<VariableDeclarationSyntax>())
+            {
+                WriteLine($"Variable name: {variableDeclaration.Variables.First().Identifier}");
+                csharpStruct.AddVariables(VisitVariableDecl(variableDeclaration));
+            }
+
+            foreach (PropertyDeclarationSyntax propertyDeclaration in node.Members.OfType<PropertyDeclarationSyntax>())
+            {
+                csharpStruct.AddVariable(VisitPropertyDecl(propertyDeclaration));
+            }
+
+            foreach (MethodDeclarationSyntax methodDeclaration in node.Members.OfType<MethodDeclarationSyntax>())
+            {
+                csharpStruct.AddMethod(VisitMethodDecl(methodDeclaration));
+            }
+
+            foreach (OperatorDeclarationSyntax operatorDeclaration in node.Members.OfType<OperatorDeclarationSyntax>())
+            {
+                csharpStruct.AddMethod(VisitOperatorDecl(operatorDeclaration));
+            }
+
+            DbContext.CsharpStructs.Add(csharpStruct);
         }
 
         public override void VisitClassDeclaration(ClassDeclarationSyntax node)
@@ -121,6 +178,11 @@ namespace StandAloneCSharpParser
                 csharpClass.AddMethod(VisitMethodDecl(methodDeclaration));
             }
 
+            foreach (OperatorDeclarationSyntax operatorDeclaration in node.Members.OfType<OperatorDeclarationSyntax>())
+            {
+                csharpClass.AddMethod(VisitOperatorDecl(operatorDeclaration));
+            }
+
             DbContext.CsharpClasses.Add(csharpClass);
         }
 
@@ -159,7 +221,6 @@ namespace StandAloneCSharpParser
                 EntityHash = astNode.EntityHash
             };
 
-            // WriteLine($"\t{node.Identifier.Text}.Parameters.Count: {node.ParameterList.Parameters.Count}");
             if (node.ParameterList.Parameters.Count > 0)
             {
                 method.AddParams(VisitMethodParameters(node.ParameterList.Parameters));
@@ -171,6 +232,55 @@ namespace StandAloneCSharpParser
             }         
 
             return method;
+        }
+
+        private CsharpMethod VisitOperatorDecl(OperatorDeclarationSyntax node)
+        {
+            //WriteLine($"\n OperatorDeclaration visited: {node}");
+            CsharpAstNode astNode = AstNode(node);
+            string qName = "";
+            string Name = "";
+            try
+            {
+                qName = Model.GetDeclaredSymbol(node).ToString();
+                Name = Model.GetDeclaredSymbol(node).Name;
+            }
+            catch (Exception)
+            {
+                WriteLine($"Can not get QualifiedName of this name: {node}");
+            }
+            string qType = "";
+            try
+            {
+                qType = Model.GetSymbolInfo(node.ReturnType).Symbol.ToString();
+            }
+            catch (Exception)
+            {
+                WriteLine($"Can not get QualifiedType of this Type: {node.ReturnType}");
+            }
+
+            CsharpMethod csharpOperator = new CsharpMethod
+            {
+                AstNode = astNode,
+                Name = Name,
+                QualifiedName = qName,
+                QualifiedType = qType,
+                DocumentationCommentXML = Model.GetDeclaredSymbol(node).GetDocumentationCommentXml(),
+                TypeHash = qType.GetHashCode(),
+                EntityHash = astNode.EntityHash
+            };
+
+            if (node.ParameterList.Parameters.Count > 0)
+            {
+                csharpOperator.AddParams(VisitMethodParameters(node.ParameterList.Parameters));
+            }
+
+            foreach (VariableDeclarationSyntax variableDeclaration in node.DescendantNodes().OfType<VariableDeclarationSyntax>())
+            {
+                csharpOperator.AddLocals(VisitVariableDecl(variableDeclaration));
+            }
+
+            return csharpOperator;
         }
 
         private HashSet<CsharpVariable> VisitMethodParameters(SeparatedSyntaxList<ParameterSyntax> parameters)
