@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using StandAloneCSharpParser.model;
@@ -9,9 +10,10 @@ using StandAloneCSharpParser.model;
 namespace StandAloneCSharpParser.Migrations
 {
     [DbContext(typeof(CsharpDbContext))]
-    partial class javadbcontextModelSnapshot : ModelSnapshot
+    [Migration("20211021110413_interfcae_delegate_constructor_destructor")]
+    partial class interfcae_delegate_constructor_destructor
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

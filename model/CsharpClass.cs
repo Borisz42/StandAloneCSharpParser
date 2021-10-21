@@ -4,9 +4,12 @@ namespace StandAloneCSharpParser.model
 {
     class CsharpClass : CsharpEntity
     {
+        public bool IsInterface { get; set; }
         public CsharpNamespace CsharpNamespace { get; set; }
         public HashSet<CsharpVariable> CsharpClassLocals { get; set; } = new HashSet<CsharpVariable>();
         public HashSet<CsharpMethod> CsharpClassMethods { get; set; } = new HashSet<CsharpMethod>();
+        public HashSet<CsharpMethod> CsharpClassConstructors { get; set; } = new HashSet<CsharpMethod>();
+        public HashSet<CsharpMethod> CsharpClassDestructors { get; set; } = new HashSet<CsharpMethod>();
         public void AddVariable(CsharpVariable var)
         {
             CsharpClassLocals.Add(var);
@@ -18,6 +21,14 @@ namespace StandAloneCSharpParser.model
         public void AddMethod(CsharpMethod method)
         {
             CsharpClassMethods.Add(method);
+        }
+        public void AddConstructor(CsharpMethod method)
+        {
+            CsharpClassConstructors.Add(method);
+        }
+        public void AddDestructor(CsharpMethod method)
+        {
+            CsharpClassDestructors.Add(method);
         }
     }
 
@@ -35,6 +46,14 @@ namespace StandAloneCSharpParser.model
             CsharpStructLocals.UnionWith(vars);
         }
         public void AddMethod(CsharpMethod method)
+        {
+            CsharpStructMethods.Add(method);
+        }        
+        public void AddConstructor(CsharpMethod method)
+        {
+            CsharpStructMethods.Add(method);
+        }
+        public void AddDestructor(CsharpMethod method)
         {
             CsharpStructMethods.Add(method);
         }

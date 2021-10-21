@@ -10,6 +10,8 @@ namespace StandAloneCSharpParser.model
         [Column("MethodLocal")]
         public HashSet<CsharpVariable> CsharpMethodLocals { get; set; } = new HashSet<CsharpVariable>();
 
+        public bool IsDelegate { get; set; }
+
         public void AddParam(CsharpVariable var)
         {
             CsharpMethodParams.Add(var);
