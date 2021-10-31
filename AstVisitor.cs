@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using static System.Console;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -11,7 +9,7 @@ using Microsoft.CodeAnalysis;
 
 namespace StandAloneCSharpParser
 {
-    class AstVisitor : CSharpSyntaxWalker
+    partial class AstVisitor : CSharpSyntaxWalker
     {
         private readonly CsharpDbContext DbContext;
         private readonly SemanticModel Model;
@@ -43,7 +41,6 @@ namespace StandAloneCSharpParser
             //base.VisitUsingDirective(node);
             //Adatbázisban nem kell feltétlenül tárolni, inkább csak azt kell biztosítani hogy amiket meghívunk vele azok is be legyenek járva
             WriteLine($" UsingDirective name: {node.Name}");
-
         }
 
         public override void VisitNamespaceDeclaration(NamespaceDeclarationSyntax node)
@@ -166,6 +163,7 @@ namespace StandAloneCSharpParser
             foreach (PropertyDeclarationSyntax propertyDeclaration in node.Members.OfType<PropertyDeclarationSyntax>())
             {
                 csharpStruct.AddVariable(VisitPropertyDecl(propertyDeclaration));
+                csharpStruct.AddMethods(VisitAccessors(propertyDeclaration.AccessorList, propertyDeclaration.Identifier.Text));
             }
 
             foreach (MethodDeclarationSyntax methodDeclaration in node.Members.OfType<MethodDeclarationSyntax>())
@@ -191,6 +189,29 @@ namespace StandAloneCSharpParser
             foreach (DestructorDeclarationSyntax destructorDeclaration in node.Members.OfType<DestructorDeclarationSyntax>())
             {
                 csharpStruct.AddDestructor(VisitDestructorDecl(destructorDeclaration));
+            }
+
+            foreach (EventDeclarationSyntax eventDeclaration in node.Members.OfType<EventDeclarationSyntax>())
+            {
+                CsharpAstNode astNode2 = AstNode(eventDeclaration);
+                string qName2 = "";
+                try
+                {
+                    qName2 = Model.GetDeclaredSymbol(node).ToString();
+                }
+                catch (Exception)
+                {
+                    WriteLine($"Can not get QualifiedName of this name: {node.Identifier}");
+                }  
+                CsharpEtcEntity csharpEntity = new CsharpEtcEntity
+                {
+                    AstNode = astNode2,
+                    Name = eventDeclaration.Identifier.Text,
+                    QualifiedName = qName,
+                    DocumentationCommentXML = Model.GetDeclaredSymbol(eventDeclaration).GetDocumentationCommentXml(),
+                    EntityHash = astNode.EntityHash
+                };
+                csharpStruct.AddEvent(csharpEntity);
             }
 
             DbContext.CsharpStructs.Add(csharpStruct);
@@ -237,6 +258,7 @@ namespace StandAloneCSharpParser
             foreach (PropertyDeclarationSyntax propertyDeclaration in node.Members.OfType<PropertyDeclarationSyntax>())
             {
                 csharpClass.AddVariable(VisitPropertyDecl(propertyDeclaration));
+                csharpClass.AddMethods(VisitAccessors(propertyDeclaration.AccessorList, propertyDeclaration.Identifier.Text));
             }
 
             foreach (MethodDeclarationSyntax methodDeclaration in node.Members.OfType<MethodDeclarationSyntax>())
@@ -264,15 +286,133 @@ namespace StandAloneCSharpParser
                 csharpClass.AddDestructor(VisitDestructorDecl(destructorDeclaration));
             }
 
+            foreach (EventDeclarationSyntax eventDeclaration in node.Members.OfType<EventDeclarationSyntax>())
+            {
+                CsharpAstNode astNode2 = AstNode(eventDeclaration);
+                string qName2 = "";
+                try
+                {
+                    qName2 = Model.GetDeclaredSymbol(node).ToString();
+                }
+                catch (Exception)
+                {
+                    WriteLine($"Can not get QualifiedName of this name: {node.Identifier}");
+                }
+                CsharpEtcEntity csharpEntity = new CsharpEtcEntity
+                {
+                    AstNode = astNode2,
+                    IsEvent = true,
+                    Name = eventDeclaration.Identifier.Text,
+                    QualifiedName = qName,
+                    DocumentationCommentXML = Model.GetDeclaredSymbol(eventDeclaration).GetDocumentationCommentXml(),
+                    EntityHash = astNode.EntityHash
+                };
+                csharpClass.AddEvent(csharpEntity);
+            }
+
             DbContext.CsharpClasses.Add(csharpClass);
         }
 
-        //public override void VisitRecordDeclaration(RecordDeclarationSyntax node) { } //RecordDeclarationSyntax missing
+        public override void VisitRecordDeclaration(RecordDeclarationSyntax node) {
+            CsharpAstNode astNode = AstNode(node);
+            //WriteLine($"\n RecordDeclaration visited: {node.Identifier}");
+            base.VisitRecordDeclaration(node);
+            string qName = "";
+            try
+            {
+                qName = Model.GetDeclaredSymbol(node).ToString();
+            }
+            catch (Exception)
+            {
+                WriteLine($"Can not get QualifiedName of this name: {node.Identifier}");
+            }
+
+            var nameSpaces = CsharpNamespaces.Where(n => qName.Contains(n.Name)).ToList();
+            CsharpNamespace csharpNamespace = null;
+            if (nameSpaces.Count == 1)
+            {
+                csharpNamespace = nameSpaces.First();
+            }
+
+            CsharpClass csharpRecord = new CsharpClass
+            {
+                IsRecord = true,
+                CsharpNamespace = csharpNamespace,
+                AstNode = astNode,
+                Name = node.Identifier.Text,
+                QualifiedName = qName,
+                DocumentationCommentXML = Model.GetDeclaredSymbol(node).GetDocumentationCommentXml(),
+                EntityHash = astNode.EntityHash
+            };
+
+            foreach (VariableDeclarationSyntax variableDeclaration in node.Members.OfType<VariableDeclarationSyntax>())
+            {
+                WriteLine($"Variable name: {variableDeclaration.Variables.First().Identifier}");
+                csharpRecord.AddVariables(VisitVariableDecl(variableDeclaration));
+            }
+
+            foreach (PropertyDeclarationSyntax propertyDeclaration in node.Members.OfType<PropertyDeclarationSyntax>())
+            {
+                csharpRecord.AddVariable(VisitPropertyDecl(propertyDeclaration));
+                csharpRecord.AddMethods(VisitAccessors(propertyDeclaration.AccessorList, propertyDeclaration.Identifier.Text));
+            }
+
+            foreach (MethodDeclarationSyntax methodDeclaration in node.Members.OfType<MethodDeclarationSyntax>())
+            {
+                csharpRecord.AddMethod(VisitMethodDecl(methodDeclaration));
+            }
+
+            foreach (OperatorDeclarationSyntax operatorDeclaration in node.Members.OfType<OperatorDeclarationSyntax>())
+            {
+                csharpRecord.AddMethod(VisitOperatorDecl(operatorDeclaration));
+            }
+
+            foreach (DelegateDeclarationSyntax delegateDeclaration in node.Members.OfType<DelegateDeclarationSyntax>())
+            {
+                csharpRecord.AddMethod(VisitDelegateDecl(delegateDeclaration));
+            }
+
+            foreach (ConstructorDeclarationSyntax constructorDeclaration in node.Members.OfType<ConstructorDeclarationSyntax>())
+            {
+                csharpRecord.AddConstructor(VisitConstructorDecl(constructorDeclaration));
+            }
+
+            foreach (DestructorDeclarationSyntax destructorDeclaration in node.Members.OfType<DestructorDeclarationSyntax>())
+            {
+                csharpRecord.AddDestructor(VisitDestructorDecl(destructorDeclaration));
+            }
+
+            foreach (EventDeclarationSyntax eventDeclaration in node.Members.OfType<EventDeclarationSyntax>())
+            {
+                CsharpAstNode astNode2 = AstNode(eventDeclaration);
+                string qName2 = "";
+                try
+                {
+                    qName2 = Model.GetDeclaredSymbol(node).ToString();
+                }
+                catch (Exception)
+                {
+                    WriteLine($"Can not get QualifiedName of this name: {node.Identifier}");
+                }
+                CsharpEtcEntity csharpEntity = new CsharpEtcEntity
+                {
+                    AstNode = astNode2,
+                    IsEvent = true,
+                    Name = eventDeclaration.Identifier.Text,
+                    QualifiedName = qName,
+                    DocumentationCommentXML = Model.GetDeclaredSymbol(eventDeclaration).GetDocumentationCommentXml(),
+                    EntityHash = astNode.EntityHash
+                };
+                csharpRecord.AddEvent(csharpEntity);
+            }
+
+            DbContext.CsharpClasses.Add(csharpRecord);
+        }
 
         private CsharpMethod VisitDelegateDecl(DelegateDeclarationSyntax node)
         {
             CsharpAstNode astNode = AstNode(node);
-            // WriteLine($"\n ConstructorDeclaration visited: {node.Identifier}");
+            //WriteLine($"\n ConstructorDeclaration visited: {node.Identifier}");
             string qName = "";
             try
             {
@@ -503,29 +643,29 @@ namespace StandAloneCSharpParser
         {
             HashSet<CsharpVariable> variables = new HashSet<CsharpVariable>();
 
-                foreach (var variable in node.Variables)
+            foreach (var variable in node.Variables)
+            {
+                CsharpAstNode astNode = AstNode(variable);
+                string varQType = "";
+                try
                 {
-                    CsharpAstNode astNode = AstNode(variable);
-                    string varQType = "";
-                    try
-                    {
-                        varQType = Model.GetSymbolInfo(node.Type).Symbol.ToString();
-                    }
-                    catch (Exception)
-                    {
-                        WriteLine($"Can not get QualifiedType of this Type: {node.Type}");
-                    }
-                    CsharpVariable csharpVariable = new CsharpVariable
-                    {
-                        AstNode = astNode,
-                        Name = variable.Identifier.Text,
-                        QualifiedType = varQType,
-                        TypeHash = varQType.GetHashCode(),
-                        DocumentationCommentXML = Model.GetDeclaredSymbol(variable).GetDocumentationCommentXml(),
-                        EntityHash = astNode.EntityHash
-                    };
-                variables.Add(csharpVariable);
+                    varQType = Model.GetSymbolInfo(node.Type).Symbol.ToString();
                 }
+                catch (Exception)
+                {
+                    WriteLine($"Can not get QualifiedType of this Type: {node.Type}");
+                }
+                CsharpVariable csharpVariable = new CsharpVariable
+                {
+                    AstNode = astNode,
+                    Name = variable.Identifier.Text,
+                    QualifiedType = varQType,
+                    TypeHash = varQType.GetHashCode(),
+                    DocumentationCommentXML = Model.GetDeclaredSymbol(variable).GetDocumentationCommentXml(),
+                    EntityHash = astNode.EntityHash
+                };
+                variables.Add(csharpVariable);
+            }
             return variables;
         }
 
@@ -552,6 +692,62 @@ namespace StandAloneCSharpParser
                 EntityHash = astNode.EntityHash
             };
             return variable;
+        }
+
+        private HashSet<CsharpMethod> VisitAccessors(AccessorListSyntax node, String propertyName)
+        {
+            HashSet<CsharpMethod> methods = new HashSet<CsharpMethod>();
+
+            if (node == null) return methods;
+
+            foreach (AccessorDeclarationSyntax accessor in node.Accessors)
+            {
+                CsharpAstNode astNode = AstNode(accessor);
+
+                String name = "";
+                switch (accessor.Kind())
+                {
+                    case SyntaxKind.GetAccessorDeclaration:
+                        name = ".Get";
+                        break;
+                    case SyntaxKind.SetAccessorDeclaration:
+                        name = ".Set";
+                        break;
+                    case SyntaxKind.InitAccessorDeclaration:
+                        name = ".Init";
+                        break;
+                    case SyntaxKind.AddAccessorDeclaration:
+                        name = ".Add";
+                        break;
+                    case SyntaxKind.RemoveAccessorDeclaration:
+                        name = ".Remove";
+                        break;
+                    case SyntaxKind.UnknownAccessorDeclaration:
+                        name = ".Unknown";
+                        break;
+                    default:
+                        WriteLine($"Can not get Type of this Accesor: {node}");
+                        break;
+                }
+
+                CsharpMethod method = new CsharpMethod
+                {
+                    AstNode = astNode,
+                    IsAccessor = true,
+                    Name = propertyName+name+"Accessor",
+                    DocumentationCommentXML = Model.GetDeclaredSymbol(accessor).GetDocumentationCommentXml(),
+                    EntityHash = astNode.EntityHash
+                };
+
+                foreach (VariableDeclarationSyntax variableDeclaration in accessor.DescendantNodes().OfType<VariableDeclarationSyntax>())
+                {
+                    method.AddLocals(VisitVariableDecl(variableDeclaration));
+                }
+
+                methods.Add(method);
+            }            
+
+            return methods;
         }
 
         public override void VisitEnumDeclaration(EnumDeclarationSyntax node)

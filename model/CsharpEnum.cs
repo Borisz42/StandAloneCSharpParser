@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StandAloneCSharpParser.model
 {
+    //[Table("csharp_enums")]
     class CsharpEnum : CsharpEntity
     {
         public CsharpNamespace CsharpNamespace { get; set; }

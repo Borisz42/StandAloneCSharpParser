@@ -1,7 +1,9 @@
-﻿using Microsoft.CodeAnalysis;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+using Microsoft.CodeAnalysis;
 
 namespace StandAloneCSharpParser.model
 {
+    //[Table("csharp_ast_nodes")]
     class CsharpAstNode
     {
         public long Id { get; set; }

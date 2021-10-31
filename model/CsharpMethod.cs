@@ -3,14 +3,15 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StandAloneCSharpParser.model
 {
+    //[Table("csharp_methods")]
     class CsharpMethod : CsharpTypedEntity
     {
-        [Column("MethodParam")] //Nem csinált semmit, a CsharpVariable osztálynál kéne jelölni
         public HashSet<CsharpVariable> CsharpMethodParams { get; set; } = new HashSet<CsharpVariable>();
-        [Column("MethodLocal")]
         public HashSet<CsharpVariable> CsharpMethodLocals { get; set; } = new HashSet<CsharpVariable>();
 
         public bool IsDelegate { get; set; }
+
+        public bool IsAccessor { get; set; }
 
         public void AddParam(CsharpVariable var)
         {

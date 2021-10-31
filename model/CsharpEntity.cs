@@ -1,4 +1,5 @@
 ﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace StandAloneCSharpParser.model
 {
@@ -16,5 +17,10 @@ namespace StandAloneCSharpParser.model
     {
         public long TypeHash { get; set; }
         public String QualifiedType { get; set; }
+    }
+    //[Table("csharp_entities")]
+    class CsharpEtcEntity : CsharpTypedEntity
+    {
+        public bool IsEvent { get; set; }
     }
 }
