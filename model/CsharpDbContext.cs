@@ -12,7 +12,7 @@ namespace StandAloneCSharpParser.model
         public DbSet<CsharpEnum> CsharpEnums { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-            => optionsBuilder.UseNpgsql("Host=localhost;Database=postgers;Username=compass;Password=1234");
+            => optionsBuilder.UseNpgsql("Host=localhost;Database=postgres;Username=compass;Password=1234");
 
     }
 

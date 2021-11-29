@@ -14,7 +14,7 @@ namespace StandAloneCSharpParser
 
         static void Main(string[] args)
         {
-            string programPath = @"C:\Users\Borisz\Desktop\parser\filesToParse\CentroidBasedClustering.cs";
+            string programPath = @"/home/borisz/Desktop/Labor/Standalone/files2parse/CentroidBasedClustering.cs";
             string programText = File.ReadAllText(programPath);
             SyntaxTree tree = CSharpSyntaxTree.ParseText(programText);
             CompilationUnitSyntax root = tree.GetCompilationUnitRoot();
@@ -24,6 +24,7 @@ namespace StandAloneCSharpParser
 
             SemanticModel model = compilation.GetSemanticModel(tree);
             CsharpDbContext dbContext = new CsharpDbContext();
+            dbContext.Database.EnsureCreated();
             
 
             var visitor = new AstVisitor(dbContext, model, tree);
